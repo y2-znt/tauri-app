@@ -1,11 +1,6 @@
 use tauri::Manager;
-use tauri_plugin_global_shortcut::{
-    Code,
-    GlobalShortcutExt,
-    Modifiers,
-    Shortcut,
-    ShortcutState,
-};
+use tauri_plugin_clipboard_manager::ClipboardExt;
+use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
 pub fn setup(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let shortcut = Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::KeyS);
@@ -19,6 +14,20 @@ pub fn setup(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
 
                 if event.state() != ShortcutState::Pressed {
                     return;
+                }
+
+                match app.clipboard().read_image() {
+                    Ok(image) => {
+                        println!(
+                            "clipboard image: {}x{} — {} bytes",
+                            image.width(),
+                            image.height(),
+                            image.rgba().len()
+                        );
+                    }
+                    Err(error) => {
+                        println!("clipboard doesn't contain an image: {error}");
+                    }
                 }
 
                 let Some(window) = app.get_webview_window("main") else {
